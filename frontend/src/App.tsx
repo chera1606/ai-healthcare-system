@@ -1,16 +1,23 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+
+type ChatResponse = {
+  ok: boolean;
+  reply?: string;
+  disclaimer?: string;
+  error?: string;
+};
 
 const initialDisclaimer =
   "Informational support only. This system does not diagnose, treat, or replace professional medical advice.";
 
 export default function App() {
-  const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("");
-  const [disclaimer, setDisclaimer] = useState(initialDisclaimer);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState<string>("");
+  const [reply, setReply] = useState<string>("");
+  const [disclaimer, setDisclaimer] = useState<string>(initialDisclaimer);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!message.trim()) {
@@ -31,13 +38,13 @@ export default function App() {
         body: JSON.stringify({ message })
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ChatResponse;
 
       if (!response.ok) {
         throw new Error(data.error || "Something went wrong");
       }
 
-      setReply(data.reply);
+      setReply(data.reply || "");
       setDisclaimer(data.disclaimer || initialDisclaimer);
       setMessage("");
     } catch (err) {
