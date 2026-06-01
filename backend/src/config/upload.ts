@@ -9,6 +9,31 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 export const reportUpload = multer({
+  limits: {
+    fileSize: 25 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimeTypes = new Set([
+      "application/pdf",
+      "text/plain",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "image/jpg",
+    ]);
+
+    if (!allowedMimeTypes.has(file.mimetype)) {
+      return cb(
+        new Error(
+          "Only PDF, TXT, and image files are allowed for report uploads.",
+        ),
+      );
+    }
+
+    cb(null, true);
+  },
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => {
       cb(null, uploadsDir);

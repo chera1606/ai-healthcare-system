@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import ReportUpload from "./components/ReportUpload";
 
 type ChatResponse = {
   ok: boolean;
@@ -116,6 +117,8 @@ export default function App() {
             <p className="mt-2 leading-7 text-slate-300">{disclaimer}</p>
           </div>
         </div>
+
+        <ReportUpload />
       </section>
     </main>
   );

@@ -7,14 +7,19 @@ type UploadRequest = Request & {
   file?: Express.Multer.File;
 };
 
-router.post(
-  "/upload",
-  reportUpload.single("report"),
-  (req: UploadRequest, res: Response) => {
+router.post("/upload", (req: UploadRequest, res: Response) => {
+  reportUpload.single("report")(req, res, (err: unknown) => {
+    if (err instanceof Error) {
+      return res.status(400).json({
+        ok: false,
+        error: err.message
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({
         ok: false,
-        error: "Report file is required",
+        error: "Report file is required"
       });
     }
 
@@ -25,10 +30,10 @@ router.post(
         originalName: req.file.originalname,
         storedName: req.file.filename,
         mimetype: req.file.mimetype,
-        size: req.file.size,
-      },
+        size: req.file.size
+      }
     });
-  },
-);
+  });
+});
 
 export default router;

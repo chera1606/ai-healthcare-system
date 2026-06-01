@@ -66,6 +66,19 @@ app.use((_req: Request, res: Response) => {
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
+
+  if (err instanceof Error) {
+    if (
+      err.message.includes("Only PDF, TXT, and image files are allowed") ||
+      err.message.includes("File too large")
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: err.message
+      });
+    }
+  }
+
   res.status(500).json({
     ok: false,
     error: "Internal server error"
