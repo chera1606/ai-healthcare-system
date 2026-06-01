@@ -29,6 +29,26 @@ app.get("/api", (req, res) => {
   });
 });
 
+app.post("/api/chat", (req, res) => {
+  const { message } = req.body || {};
+
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({
+      ok: false,
+      error: "Message is required"
+    });
+  }
+
+  const cleanMessage = message.trim();
+
+  return res.json({
+    ok: true,
+    reply: `I received your message: "${cleanMessage}". This is the first chat endpoint and will later be connected to real AI.`,
+    disclaimer:
+      "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+  });
+});
+
 app.use((req, res) => {
   res.status(404).json({
     ok: false,
