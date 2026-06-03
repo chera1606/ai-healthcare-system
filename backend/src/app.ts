@@ -2,10 +2,10 @@ import express, { type NextFunction, type Request, type Response } from "express
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import reportRoutes from "./routes/report.routes.js";
-import { searchSimilarReports } from "./repositories/search.repository.js";
-import { generateEmbedding } from "./services/embeddings.js";
-import { generateRAGAnswer } from "./services/rag.js";
+import reportRoutes from "./modules/rag/routes/report.routes.js";
+import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
+import { generateEmbedding } from "./modules/rag/services/embeddings.js";
+import { generateRAGAnswer } from "./modules/rag/services/rag.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();

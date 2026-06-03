@@ -1,4 +1,4 @@
-import { getPool } from "../db/pool.js";
+import { getPool } from "../../../shared/database/pool.js";
 
 export async function searchSimilarReports(query: string, limit: number = 5) {
   // Professional RAG: search chunks with vector similarity

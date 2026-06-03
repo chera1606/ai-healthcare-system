@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { reportUpload } from "../config/upload.js";
+import { reportUpload } from "../../../config/upload.js";
 import { getReportFileKind } from "../services/fileType.js";
 import { extractReportText } from "../services/extractText.js";
 import { createReportRecord } from "../repositories/report.repository.js";

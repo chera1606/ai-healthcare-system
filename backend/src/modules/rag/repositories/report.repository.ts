@@ -1,5 +1,5 @@
-import { getPool } from "../db/pool.js";
-import { ensureDatabase } from "../db/init.js";
+import { getPool } from "../../../shared/database/pool.js";
+import { ensureDatabase } from "../../../shared/database/init.js";
 
 export type ReportSourceKind = "pdf" | "text" | "image" | "unknown";
 
