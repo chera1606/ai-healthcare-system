@@ -12,24 +12,12 @@ type UploadResponse = {
   };
 };
 
-const safeParseResponse = async (response: Response): Promise<UploadResponse> => {
-  const text = await response.text();
 
-  if (!text) {
-    return { ok: false, error: "Empty response from server" };
-  }
+interface ReportUploadProps {
+  onUploadSuccess?: (message: string) => void;
+}
 
-  try {
-    return JSON.parse(text) as UploadResponse;
-  } catch {
-    return {
-      ok: false,
-      error: text || "Server returned an invalid response"
-    };
-  }
-};
-
-export default function ReportUpload() {
+export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -118,15 +106,22 @@ export default function ReportUpload() {
         body: formData,
       });
 
-      const data = await safeParseResponse(response);
+      const text = await response.text();
+      
+      if (!text) {
+        throw new Error("Empty response from server");
+      }
+
+      const data = JSON.parse(text) as UploadResponse;
 
       if (!response.ok) {
         throw new Error(data.error || "Upload failed");
       }
 
-      setStatus(
-        `Uploaded ${data.file?.originalName || "report"} successfully.`,
-      );
+      const successMessage = `Uploaded ${data.file?.originalName || "report"} successfully.`;
+      setStatus(successMessage);
+      if (onUploadSuccess) onUploadSuccess(successMessage);
+      
       setFile(null);
       setPreviewUrl("");
       form.reset();
@@ -141,15 +136,15 @@ export default function ReportUpload() {
   };
 
   return (
-    <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl shadow-black/20">
-      <h2 className="text-2xl font-semibold text-white">
-        Upload Medical Report
-      </h2>
-      <p className="mt-2 text-sm text-slate-300">
-        Upload a `.pdf`, `.txt`, or take a photo from camera/gallery for your medical records.
-      </p>
+    <div className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 shadow-2xl shadow-black/30">
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-white">Upload Medical Report</h2>
+        <p className="mt-2 text-slate-300">
+          Upload PDF, TXT, or images to add them to your searchable medical intelligence database
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div
           onDragEnter={() => setIsDragging(true)}
           onDragOver={(event) => {
@@ -159,20 +154,25 @@ export default function ReportUpload() {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => documentInputRef.current?.click()}
-          className={`cursor-pointer rounded-3xl border-2 border-dashed px-5 py-8 transition ${
+          className={`cursor-pointer rounded-3xl border-2 border-dashed px-8 py-12 transition-all duration-300 ${
             isDragging
-              ? "border-teal-400 bg-teal-500/10"
-              : "border-slate-700 bg-slate-950 hover:border-teal-400"
+              ? "border-teal-400 bg-teal-500/10 scale-[1.02]"
+              : "border-slate-700 bg-slate-950/50 hover:border-teal-400/50 hover:bg-slate-950"
           }`}
         >
           <div className="text-center">
-            <p className="text-base font-semibold text-white">
-              Drag and drop a report here
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-800">
+              <svg className="h-8 w-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold text-white">
+              Drag and drop your medical report here
             </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Or click to choose a document, take a photo, or pick from your gallery.
+            <p className="mt-2 text-sm text-slate-400">
+              Supports PDF, TXT, and images (JPG, PNG)
             </p>
-            <div className="mt-4 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+            <div className="mt-4 inline-flex items-center rounded-full border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
               {fileBadge}
             </div>
           </div>
@@ -182,25 +182,41 @@ export default function ReportUpload() {
           <button
             type="button"
             onClick={() => documentInputRef.current?.click()}
-            className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-teal-400"
+            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
           >
-            Upload document
+            <span className="flex items-center justify-center gap-2">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Document
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-teal-400"
+            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
           >
-            Take photo
+            <span className="flex items-center justify-center gap-2">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Camera
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => galleryInputRef.current?.click()}
-            className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-100 transition hover:border-teal-400"
+            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
           >
-            Choose from gallery
+            <span className="flex items-center justify-center gap-2">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Gallery
+            </span>
           </button>
         </div>
 
@@ -229,19 +245,26 @@ export default function ReportUpload() {
           className="hidden"
         />
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-300">
-          {file ? `Selected: ${file.name}` : "No file selected yet."}
-        </div>
+        {file && (
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm text-slate-300">
+            <span className="flex items-center gap-2">
+              <svg className="h-4 w-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {file.name}
+            </span>
+          </div>
+        )}
 
         {previewUrl && (
-          <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
+          <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
             <div className="border-b border-slate-800 px-4 py-3 text-sm font-medium text-slate-200">
               Photo preview
             </div>
             <img
               src={previewUrl}
               alt="Selected report preview"
-              className="max-h-[420px] w-full object-contain bg-black"
+              className="max-h-[400px] w-full object-contain bg-black"
             />
           </div>
         )}
@@ -249,20 +272,30 @@ export default function ReportUpload() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-2xl bg-teal-500 px-5 py-3 font-medium text-white transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 px-6 py-4 text-lg font-semibold text-white transition-all hover:from-teal-400 hover:to-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg shadow-teal-500/25"
         >
-          {loading ? "Uploading..." : "Upload report"}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Uploading...
+            </span>
+          ) : (
+            "Upload Report"
+          )}
         </button>
       </form>
 
       {error && (
-        <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-200">
+        <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-4 text-red-200">
           {error}
         </div>
       )}
 
       {status && (
-        <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-emerald-200">
+        <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 text-emerald-200">
           {status}
         </div>
       )}
