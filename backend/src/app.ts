@@ -7,6 +7,7 @@ import agentRoutes from "./modules/agents/routes/agents.routes.js";
 import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
 import { ReportExplainerAgent } from "./modules/agents/report-explainer/ReportExplainerAgent.js";
+import { SupervisorAgent } from "./modules/agents/supervisor/SupervisorAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
@@ -92,15 +93,46 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
   try {
     console.log(`RAG Chat: Processing message: "${cleanMessage}"`);
     
-    // Step 1: Generate embedding for the question
+    // Step 1: Use SupervisorAgent to route the message
+    const supervisor = new SupervisorAgent();
+    const routing = supervisor.routeMessage({ message: cleanMessage });
+    console.log(`RAG Chat: Supervisor selected agent: ${routing.selectedAgent} (confidence: ${routing.confidence})`);
+    
+    // Step 2: Check if the selected agent is implemented
+    if (!supervisor.isAgentImplemented(routing.selectedAgent)) {
+      // Fallback: Use report_explainer with a message about the feature
+      console.log(`RAG Chat: Agent ${routing.selectedAgent} not implemented, using report_explainer fallback`);
+      
+      const questionEmbedding = await generateEmbedding(cleanMessage);
+      const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
+      const agent = new ReportExplainerAgent();
+      const { answer, sources } = await agent.explainReport({
+        question: cleanMessage,
+        retrievedChunks: relevantChunks,
+        patientId: undefined
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: `That specialist feature is not ready yet, but I can still help explain information from your uploaded report. This is informational and not medical advice.\n\n${answer}`,
+        sources,
+        disclaimer:
+          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+      });
+    }
+    
+    // Step 3: Generate embedding for the question
     const questionEmbedding = await generateEmbedding(cleanMessage);
     console.log(`RAG Chat: Generated embedding with ${questionEmbedding.length} dimensions`);
     
-    // Step 2: Retrieve relevant chunks using vector similarity search
+    // Step 4: Retrieve relevant chunks using vector similarity search
     const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
     console.log(`RAG Chat: Retrieved ${relevantChunks.length} relevant chunks`);
     
-    // Step 3: Use ReportExplainerAgent to generate explanation
+    // Step 5: Use the selected agent to generate explanation
     const agent = new ReportExplainerAgent();
     const { answer, sources } = await agent.explainReport({
       question: cleanMessage,
@@ -110,6 +142,9 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
     
     return res.json({
       ok: true,
+      selectedAgent: routing.selectedAgent,
+      confidence: routing.confidence,
+      reason: routing.reason,
       reply: answer,
       sources,
       disclaimer:
@@ -120,6 +155,78 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : "RAG Chat failed"
+    });
+  }
+});
+
+app.post("/api/agents/chat", async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+  const { message } = req.body || {};
+
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({
+      ok: false,
+      error: "Message is required"
+    });
+  }
+
+  const cleanMessage = message.trim();
+
+  try {
+    console.log(`Agents Chat: Processing message: "${cleanMessage}"`);
+    
+    // Step 1: Use SupervisorAgent to route the message
+    const supervisor = new SupervisorAgent();
+    const routing = supervisor.routeMessage({ message: cleanMessage });
+    console.log(`Agents Chat: Supervisor selected agent: ${routing.selectedAgent} (confidence: ${routing.confidence})`);
+    
+    // Step 2: Check if the selected agent is implemented
+    if (!supervisor.isAgentImplemented(routing.selectedAgent)) {
+      // Fallback: Return a message about the feature not being ready
+      console.log(`Agents Chat: Agent ${routing.selectedAgent} not implemented`);
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: "That specialist feature is not ready yet, but I can still help explain information from your uploaded report. This is informational and not medical advice.",
+        sources: [],
+        disclaimer:
+          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+      });
+    }
+    
+    // Step 3: Generate embedding for the question
+    const questionEmbedding = await generateEmbedding(cleanMessage);
+    console.log(`Agents Chat: Generated embedding with ${questionEmbedding.length} dimensions`);
+    
+    // Step 4: Retrieve relevant chunks using vector similarity search
+    const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
+    console.log(`Agents Chat: Retrieved ${relevantChunks.length} relevant chunks`);
+    
+    // Step 5: Use the selected agent to generate explanation
+    const agent = new ReportExplainerAgent();
+    const { answer, sources } = await agent.explainReport({
+      question: cleanMessage,
+      retrievedChunks: relevantChunks,
+      patientId: undefined
+    });
+    
+    return res.json({
+      ok: true,
+      selectedAgent: routing.selectedAgent,
+      confidence: routing.confidence,
+      reason: routing.reason,
+      reply: answer,
+      sources,
+      disclaimer:
+        "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+    });
+  } catch (error) {
+    console.error("Agents Chat error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: error instanceof Error ? error.message : "Agents Chat failed"
     });
   }
 });
