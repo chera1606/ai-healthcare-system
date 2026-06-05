@@ -6,7 +6,7 @@ import reportRoutes from "./modules/rag/routes/report.routes.js";
 import agentRoutes from "./modules/agents/routes/agents.routes.js";
 import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
-import { ReportExplainerAgent } from "./agents/ReportExplainerAgent.js";
+import { ReportExplainerAgent } from "./modules/agents/report-explainer/ReportExplainerAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
