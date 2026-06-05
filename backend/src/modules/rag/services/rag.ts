@@ -54,17 +54,62 @@ Answer:`;
   
   console.log(`RAG: Generated answer with ${answer.length} characters`);
   
-  // Step 5: Return answer with sources
-  const sources = relevantChunks.map(chunk => ({
-    chunkId: chunk.chunkId,
-    reportId: chunk.reportId,
-    chunkText: chunk.chunkText.substring(0, 200) + (chunk.chunkText.length > 200 ? '...' : ''),
-    originalName: chunk.originalName,
-    similarity: chunk.similarity
-  }));
+  // Step 5: Deduplicate sources by chunkId and normalized text
+  const seenChunkIds = new Set<number>();
+  const seenNormalizedText = new Set<string>();
+  const uniqueSources: any[] = [];
+  
+  // Helper function to normalize text for comparison
+  const normalizeText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ')
+      .substring(0, 200); // Compare only first 200 characters
+  };
+  
+  for (const chunk of relevantChunks) {
+    // Skip if we've already seen this chunkId
+    if (seenChunkIds.has(chunk.chunkId)) {
+      console.log(`RAG: Skipping duplicate chunkId ${chunk.chunkId}`);
+      continue;
+    }
+    
+    // Normalize the chunk text for comparison
+    const normalizedText = normalizeText(chunk.chunkText);
+    
+    // Skip if we've already seen this normalized text (prevents similar chunks)
+    if (seenNormalizedText.has(normalizedText)) {
+      console.log(`RAG: Skipping duplicate normalized text from chunkId ${chunk.chunkId}`);
+      continue;
+    }
+    
+    seenChunkIds.add(chunk.chunkId);
+    seenNormalizedText.add(normalizedText);
+    
+    // Add to unique sources with text preview (150-250 characters)
+    const previewLength = 200;
+    const textPreview = chunk.chunkText.substring(0, previewLength) + 
+                        (chunk.chunkText.length > previewLength ? '...' : '');
+    
+    uniqueSources.push({
+      chunkId: chunk.chunkId,
+      reportId: chunk.reportId,
+      fileName: chunk.originalName,
+      textPreview: textPreview,
+      similarity: chunk.similarity
+    });
+    
+    // Limit to top 3 unique sources
+    if (uniqueSources.length >= 3) {
+      break;
+    }
+  }
+  
+  console.log(`RAG: Returning ${uniqueSources.length} unique sources out of ${relevantChunks.length} retrieved chunks`);
   
   return {
     answer,
-    sources
+    sources: uniqueSources
   };
 }
