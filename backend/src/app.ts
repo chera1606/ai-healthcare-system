@@ -6,7 +6,7 @@ import reportRoutes from "./modules/rag/routes/report.routes.js";
 import agentRoutes from "./modules/agents/routes/agents.routes.js";
 import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
-import { generateRAGAnswer } from "./modules/rag/services/rag.js";
+import { ReportExplainerAgent } from "./agents/ReportExplainerAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
@@ -91,7 +91,22 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
 
   try {
     console.log(`RAG Chat: Processing message: "${cleanMessage}"`);
-    const { answer, sources } = await generateRAGAnswer(cleanMessage);
+    
+    // Step 1: Generate embedding for the question
+    const questionEmbedding = await generateEmbedding(cleanMessage);
+    console.log(`RAG Chat: Generated embedding with ${questionEmbedding.length} dimensions`);
+    
+    // Step 2: Retrieve relevant chunks using vector similarity search
+    const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
+    console.log(`RAG Chat: Retrieved ${relevantChunks.length} relevant chunks`);
+    
+    // Step 3: Use ReportExplainerAgent to generate explanation
+    const agent = new ReportExplainerAgent();
+    const { answer, sources } = await agent.explainReport({
+      question: cleanMessage,
+      retrievedChunks: relevantChunks,
+      patientId: undefined // Can be added later if user authentication is implemented
+    });
     
     return res.json({
       ok: true,
