@@ -69,6 +69,16 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   confidence?: number;
+  sources?: SourceCitation[];
+}
+
+// Source Citation
+export interface SourceCitation {
+  chunkId: number;
+  reportId: number;
+  chunkText: string;
+  originalName: string;
+  similarity: number;
 }
 
 // Health Stats

@@ -31,6 +31,7 @@ export function useAIChat() {
         content: response.reply || response.data?.reply || response.data?.message || response.message || 'Sorry, I could not process your request.',
         timestamp: new Date(),
         confidence: response.confidence || response.data?.confidence,
+        sources: response.sources || response.data?.sources,
       };
       setMessages((prev) => [...prev, assistantMessage]);
 

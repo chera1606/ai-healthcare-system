@@ -11,7 +11,7 @@ function getGenAI(): GoogleGenerativeAI {
   return genAI;
 }
 
-export async function generateRAGAnswer(question: string): Promise<string> {
+export async function generateRAGAnswer(question: string): Promise<{ answer: string; sources: any[] }> {
   console.log(`RAG: Processing question: "${question}"`);
   
   // Step 1: Generate embedding for the question
@@ -23,7 +23,10 @@ export async function generateRAGAnswer(question: string): Promise<string> {
   console.log(`RAG: Retrieved ${relevantChunks.length} relevant chunks`);
   
   if (relevantChunks.length === 0) {
-    return "I don't have any relevant information in the uploaded reports to answer your question. Please upload medical reports first.";
+    return {
+      answer: "I don't have any relevant information in the uploaded reports to answer your question. Please upload medical reports first.",
+      sources: []
+    };
   }
   
   // Step 3: Build context from retrieved chunks
@@ -51,5 +54,17 @@ Answer:`;
   
   console.log(`RAG: Generated answer with ${answer.length} characters`);
   
-  return answer;
+  // Step 5: Return answer with sources
+  const sources = relevantChunks.map(chunk => ({
+    chunkId: chunk.chunkId,
+    reportId: chunk.reportId,
+    chunkText: chunk.chunkText.substring(0, 200) + (chunk.chunkText.length > 200 ? '...' : ''),
+    originalName: chunk.originalName,
+    similarity: chunk.similarity
+  }));
+  
+  return {
+    answer,
+    sources
+  };
 }

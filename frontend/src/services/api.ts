@@ -59,7 +59,7 @@ class ApiService {
 
   // AI Assistant
   async chatWithAI(message: string, conversationHistory?: any[]) {
-    return this.request<any>('/chat', {
+    return this.request<any>('/rag-chat', {
       method: 'POST',
       body: JSON.stringify({
         message,

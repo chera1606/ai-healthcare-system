@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import reportRoutes from "./modules/rag/routes/report.routes.js";
+import agentRoutes from "./modules/agents/routes/agents.routes.js";
 import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
 import { generateRAGAnswer } from "./modules/rag/services/rag.js";
@@ -25,6 +26,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use("/api/reports", reportRoutes);
+app.use("/api/agents", agentRoutes);
 
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({
@@ -89,11 +91,12 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
 
   try {
     console.log(`RAG Chat: Processing message: "${cleanMessage}"`);
-    const reply = await generateRAGAnswer(cleanMessage);
+    const { answer, sources } = await generateRAGAnswer(cleanMessage);
     
     return res.json({
       ok: true,
-      reply,
+      reply: answer,
+      sources,
       disclaimer:
         "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
     });

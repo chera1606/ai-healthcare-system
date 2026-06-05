@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAIChat } from '../hooks/useAIChat';
 import { formatDateTime } from '../utils/formatDate';
+import { SourceCitation } from '../types';
 
 interface AIAssistantProps {
   activeTab: string;
@@ -133,6 +134,32 @@ export default function AIAssistant({ activeTab }: AIAssistantProps) {
                         <span className="text-labelSm text-onSurfaceVariant">
                           Confidence: {Math.round(message.confidence * 100)}%
                         </span>
+                      </div>
+                    )}
+                    {message.sources && message.sources.length > 0 && message.role === 'assistant' && (
+                      <div className="mt-3 pt-3 border-t border-outlineVariant/20">
+                        <div className="flex items-center gap-sm mb-2">
+                          <span className="material-symbols-outlined text-[16px] text-primary">source</span>
+                          <span className="text-labelSm font-semibold text-onSurface">Sources</span>
+                        </div>
+                        <div className="space-y-2">
+                          {message.sources.map((source: SourceCitation, index: number) => (
+                            <div key={`${source.chunkId}-${index}`} className="p-sm bg-surfaceContainer rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <span className="text-labelSm text-primary font-medium">[{index + 1}]</span>
+                                <div className="flex-1">
+                                  <p className="text-bodySm text-onSurface mb-1">{source.chunkText}</p>
+                                  <div className="flex items-center gap-2 text-labelSm text-onSurfaceVariant">
+                                    <span className="material-symbols-outlined text-[14px]">description</span>
+                                    <span>{source.originalName}</span>
+                                    <span className="text-outline">•</span>
+                                    <span className="text-primary">Similarity: {(source.similarity * 100).toFixed(0)}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                     <div className="mt-2 pt-2 border-t border-outlineVariant/20">

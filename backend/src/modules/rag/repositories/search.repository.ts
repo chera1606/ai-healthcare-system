@@ -6,6 +6,7 @@ export async function searchSimilarReports(query: string, limit: number = 5) {
     `
       SELECT 
         dc.id,
+        dc.report_id,
         dc.chunk_text,
         dc.chunk_index,
         r.original_name,
@@ -21,6 +22,7 @@ export async function searchSimilarReports(query: string, limit: number = 5) {
 
   return result.rows.map(row => ({
     chunkId: row.id,
+    reportId: row.report_id,
     chunkText: row.chunk_text,
     chunkIndex: row.chunk_index,
     originalName: row.original_name,
