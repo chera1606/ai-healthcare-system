@@ -6,6 +6,7 @@ import { createReportRecord } from "../repositories/report.repository.js";
 import { generateEmbedding } from "../services/embeddings.js";
 import { chunkText } from "../services/chunking.js";
 import { createChunk } from "../repositories/chunk.repository.js";
+import { extractAndSaveObservations } from "../../observations/observations.service.js";
 const router = Router();
 
 type UploadRequest = Request & {
@@ -76,6 +77,23 @@ async function processUpload(req: UploadRequest, res: Response): Promise<void> {
         if (global.gc) global.gc();
       }
       console.log(`Successfully saved all ${chunks.length} chunks to database`);
+
+      // Extract and save structured medical observations
+      // Note: Using patient_id = 1 for now (will be replaced with actual user authentication later)
+      try {
+        const observationResult = await extractAndSaveObservations({
+          reportText: extractedText,
+          reportId: savedReport.id,
+          patientId: 1, // TODO: Replace with actual patient ID from authentication
+          hospitalName: undefined, // Could extract from report text
+          reportDate: undefined // Could extract from report text
+        });
+        console.log(`Extracted and saved ${observationResult.observations.length} medical observations`);
+      } catch (obsError) {
+        console.error(`Failed to extract observations:`, obsError);
+        // Don't fail the upload if observation extraction fails
+        // Just log the error and continue
+      }
 
       res.json({
         ok: true,
