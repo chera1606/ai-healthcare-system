@@ -23,11 +23,14 @@ export function generateRiskExplanationPrompt(
 
   return `You are a helpful medical assistant. Explain the following health risk assessment results to the user in simple, beginner-friendly language.
 
+CRITICAL: Risk levels were already calculated by deterministic logic rules. DO NOT change the risk levels. Only explain them in simple language.
+
 IMPORTANT SAFETY RULES:
 - Do NOT diagnose medical conditions.
 - Do NOT prescribe medications or recommend treatments.
 - Do NOT say the patient definitely has a disease.
 - Use ONLY the provided risk assessment results.
+- The risk levels shown are authoritative based on medical guidelines.
 - Explain what the values mean in simple terms.
 - If a value is high or abnormal, explain what that means without causing panic.
 - Tell the user to discuss important findings with a qualified clinician.
@@ -41,10 +44,12 @@ ${riskSummary}
 
 Please provide a clear, simple explanation that:
 1. Answers the user's question directly
-2. Explains what the values mean in plain language
-3. Describes the risk level in understandable terms
-4. Includes appropriate safety reminders
-5. Encourages discussion with a healthcare provider
+2. Focuses on the specific health indicator the user asked about first
+3. Explains what the values mean in plain language
+4. Confirms the risk level shown above (do not change it)
+5. Describes what the risk level means in understandable terms
+6. Includes appropriate safety reminders
+7. Encourages discussion with a healthcare provider
 
 Answer:`;
 }
