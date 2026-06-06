@@ -7,6 +7,7 @@ import agentRoutes from "./modules/agents/routes/agents.routes.js";
 import { searchSimilarReports } from "./modules/rag/repositories/search.repository.js";
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
 import { ReportExplainerAgent } from "./modules/agents/report-explainer/ReportExplainerAgent.js";
+import { RiskAnalyzerAgent } from "./modules/agents/risk-analyzer/RiskAnalyzerAgent.js";
 import { SupervisorAgent } from "./modules/agents/supervisor/SupervisorAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -132,24 +133,48 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
     const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
     console.log(`RAG Chat: Retrieved ${relevantChunks.length} relevant chunks`);
     
-    // Step 5: Use the selected agent to generate explanation
-    const agent = new ReportExplainerAgent();
-    const { answer, sources } = await agent.explainReport({
-      question: cleanMessage,
-      retrievedChunks: relevantChunks,
-      patientId: undefined // Can be added later if user authentication is implemented
-    });
-    
-    return res.json({
-      ok: true,
-      selectedAgent: routing.selectedAgent,
-      confidence: routing.confidence,
-      reason: routing.reason,
-      reply: answer,
-      sources,
-      disclaimer:
-        "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
-    });
+    // Step 5: Route to the appropriate agent based on supervisor selection
+    let result;
+    if (routing.selectedAgent === 'risk_analyzer') {
+      console.log(`RAG Chat: Routing to RiskAnalyzerAgent`);
+      const riskAgent = new RiskAnalyzerAgent();
+      result = await riskAgent.analyzeRisk({
+        question: cleanMessage,
+        retrievedChunks: relevantChunks,
+        patientId: undefined
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: result.answer,
+        risks: result.risks,
+        sources: result.sources,
+        disclaimer: result.disclaimer
+      });
+    } else {
+      // Default to ReportExplainerAgent
+      console.log(`RAG Chat: Routing to ReportExplainerAgent`);
+      const agent = new ReportExplainerAgent();
+      result = await agent.explainReport({
+        question: cleanMessage,
+        retrievedChunks: relevantChunks,
+        patientId: undefined
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: result.answer,
+        sources: result.sources,
+        disclaimer:
+          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+      });
+    }
   } catch (error) {
     console.error("RAG Chat error:", error);
     return res.status(500).json({
@@ -204,24 +229,48 @@ app.post("/api/agents/chat", async (req: Request<{}, {}, ChatRequestBody>, res: 
     const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
     console.log(`Agents Chat: Retrieved ${relevantChunks.length} relevant chunks`);
     
-    // Step 5: Use the selected agent to generate explanation
-    const agent = new ReportExplainerAgent();
-    const { answer, sources } = await agent.explainReport({
-      question: cleanMessage,
-      retrievedChunks: relevantChunks,
-      patientId: undefined
-    });
-    
-    return res.json({
-      ok: true,
-      selectedAgent: routing.selectedAgent,
-      confidence: routing.confidence,
-      reason: routing.reason,
-      reply: answer,
-      sources,
-      disclaimer:
-        "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
-    });
+    // Step 5: Route to the appropriate agent based on supervisor selection
+    let result;
+    if (routing.selectedAgent === 'risk_analyzer') {
+      console.log(`Agents Chat: Routing to RiskAnalyzerAgent`);
+      const riskAgent = new RiskAnalyzerAgent();
+      result = await riskAgent.analyzeRisk({
+        question: cleanMessage,
+        retrievedChunks: relevantChunks,
+        patientId: undefined
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: result.answer,
+        risks: result.risks,
+        sources: result.sources,
+        disclaimer: result.disclaimer
+      });
+    } else {
+      // Default to ReportExplainerAgent
+      console.log(`Agents Chat: Routing to ReportExplainerAgent`);
+      const agent = new ReportExplainerAgent();
+      result = await agent.explainReport({
+        question: cleanMessage,
+        retrievedChunks: relevantChunks,
+        patientId: undefined
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: routing.confidence,
+        reason: routing.reason,
+        reply: result.answer,
+        sources: result.sources,
+        disclaimer:
+          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+      });
+    }
   } catch (error) {
     console.error("Agents Chat error:", error);
     return res.status(500).json({

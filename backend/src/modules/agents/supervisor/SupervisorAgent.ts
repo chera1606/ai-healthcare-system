@@ -89,9 +89,11 @@ export class SupervisorAgent {
    * @returns True if the agent is implemented
    */
   isAgentImplemented(agent: string): boolean {
-    // Currently only report_explainer is implemented
+    // Currently implemented agents:
+    // - report_explainer: Explains medical reports in simple language
+    // - risk_analyzer: Analyzes health risk signals using rule-based checks
     // Other agents will be added in future tasks
-    const implementedAgents = ['report_explainer'];
+    const implementedAgents = ['report_explainer', 'risk_analyzer'];
     return implementedAgents.includes(agent);
   }
 }
