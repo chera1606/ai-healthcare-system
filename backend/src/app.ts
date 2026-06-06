@@ -24,7 +24,7 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "10mb", type: "application/json" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use("/api/reports", reportRoutes);

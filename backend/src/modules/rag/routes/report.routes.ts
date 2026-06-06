@@ -17,6 +17,33 @@ router.post("/upload", (req: UploadRequest, res: Response) => {
   void processUpload(req, res);
 });
 
+// GET /api/reports - List all reports
+router.get("/", async (_req: Request, res: Response) => {
+  try {
+    const { getPool } = await import("../../../shared/database/pool.js");
+    const { ensureDatabase } = await import("../../../shared/database/init.js");
+    
+    await ensureDatabase();
+    
+    const result = await getPool().query(
+      `SELECT id, original_name, stored_name, mimetype, size, created_at 
+       FROM reports 
+       ORDER BY created_at DESC`
+    );
+    
+    res.json({
+      ok: true,
+      reports: result.rows
+    });
+  } catch (error) {
+    console.error("Failed to fetch reports:", error);
+    res.status(500).json({
+      ok: false,
+      error: error instanceof Error ? error.message : "Failed to fetch reports"
+    });
+  }
+});
+
 export default router;
 
 async function processUpload(req: UploadRequest, res: Response): Promise<void> {
