@@ -40,7 +40,10 @@ export const EXTRACTION_PATTERNS = {
   age: /age[:\s]*(\d{1,3})\s*(?:years?\s*old)?/gi,
   
   // Visit date: matches "June 1, 2026" or "01/06/2026" or "visit date: June 1, 2026"
-  visit_date: /(?:visit\s*date|date\s*of\s*visit|date)[:\s]*([A-Za-z]+\s+\d{1,2},?\s*\d{4}|\d{1,2}\/\d{1,2}\/\d{4})/gi
+  visit_date: /(?:visit\s*date|date\s*of\s*visit|date)[:\s]*([A-Za-z]+\s+\d{1,2},?\s*\d{4}|\d{1,2}\/\d{1,2}\/\d{4})/gi,
+  
+  // Hospital: matches "Hospital: Green Valley Medical Center"
+  hospital: /Hospital:\s*(.+)/i
 };
 
 // ============================================
@@ -265,6 +268,22 @@ export function extractVisitDate(text: string): RegexExtractionResult | null {
 }
 
 /**
+ * Extracts hospital name from text using regex
+ */
+export function extractHospital(text: string): RegexExtractionResult | null {
+  const match = text.match(EXTRACTION_PATTERNS.hospital);
+  if (!match) return null;
+  
+  return {
+    observationType: 'visit_info',
+    observationKey: 'hospital',
+    valueText: match[1].trim(),
+    sourceText: match[0],
+    confidence: 0.95
+  };
+}
+
+/**
  * Runs all regex extractions on the given text
  */
 export function extractAllWithRegex(text: string): RegexExtractionResult[] {
@@ -281,7 +300,8 @@ export function extractAllWithRegex(text: string): RegexExtractionResult[] {
     extractFastingGlucose,
     extractHemoglobin,
     extractAge,
-    extractVisitDate
+    extractVisitDate,
+    extractHospital
   ];
   
   for (const extractor of extractors) {

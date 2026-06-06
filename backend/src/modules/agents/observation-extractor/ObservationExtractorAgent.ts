@@ -36,6 +36,11 @@ export class ObservationExtractorAgent {
     const regexObservations = this.extractWithRegex(reportText);
     console.log(`ObservationExtractorAgent: Extracted ${regexObservations.length} observations via regex`);
 
+    // Extract hospital name from regex results if not provided
+    const extractedHospital = regexObservations.find(obs => obs.observationKey === 'hospital')?.valueText;
+    const finalHospitalName = hospitalName || extractedHospital;
+    console.log(`ObservationExtractorAgent: Final hospital name: ${finalHospitalName || 'not specified'}`);
+
     // Step 2: Extract observations using Gemini (for complex fields like medications, assessments)
     const geminiObservations = await this.extractWithGemini(reportText);
     console.log(`ObservationExtractorAgent: Extracted ${geminiObservations.length} observations via Gemini`);
@@ -47,7 +52,7 @@ export class ObservationExtractorAgent {
     // Step 4: Add metadata to each observation
     const enrichedObservations = allObservations.map(obs => ({
       ...obs,
-      hospitalName: hospitalName,
+      hospitalName: finalHospitalName,
       observedAt: reportDate || this.extractDateFromText(reportText)
     }));
 
