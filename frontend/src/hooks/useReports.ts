@@ -12,7 +12,7 @@ export function useReports() {
       setLoading(true);
       setError(null);
       const response = await apiService.getReports();
-      setReports(response.data || []);
+      setReports(response.reports || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch reports');
     } finally {

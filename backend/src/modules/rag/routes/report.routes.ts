@@ -126,15 +126,56 @@ router.get("/", async (_req: Request, res: Response) => {
        ORDER BY created_at DESC`
     );
     
+    // Map database fields to frontend expected format
+    const reports = result.rows.map((row: any) => ({
+      id: row.id,
+      name: row.original_name,
+      date: row.created_at,
+      type: 'Medical Report',
+      status: 'Analyzed',
+      icon: 'description'
+    }));
+    
     res.json({
       ok: true,
-      reports: result.rows
+      reports
     });
   } catch (error) {
     console.error("Failed to fetch reports:", error);
     res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : "Failed to fetch reports"
+    });
+  }
+});
+
+// DELETE /api/reports/:id - Delete a report
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { getPool } = await import("../../../shared/database/pool.js");
+    const { ensureDatabase } = await import("../../../shared/database/init.js");
+    
+    await ensureDatabase();
+    
+    // Delete chunks first
+    await getPool().query("DELETE FROM document_chunks WHERE report_id = $1", [id]);
+    
+    // Delete observations
+    await getPool().query("DELETE FROM medical_observations WHERE report_id = $1", [id]);
+    
+    // Delete report
+    await getPool().query("DELETE FROM reports WHERE id = $1", [id]);
+    
+    res.json({
+      ok: true,
+      message: "Report deleted successfully"
+    });
+  } catch (error) {
+    console.error("Failed to delete report:", error);
+    res.status(500).json({
+      ok: false,
+      error: error instanceof Error ? error.message : "Failed to delete report"
     });
   }
 });

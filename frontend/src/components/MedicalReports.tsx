@@ -11,6 +11,7 @@ export default function MedicalReports({ activeTab }: MedicalReportsProps) {
   const { reports, loading, error, uploadReport, deleteReport } = useReports();
   const [filter, setFilter] = useState<string>('All');
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredReports = reports.filter(report => {
@@ -47,6 +48,8 @@ export default function MedicalReports({ activeTab }: MedicalReportsProps) {
   const handleFileUpload = async (file: File) => {
     try {
       await uploadReport(file);
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
       console.error('Failed to upload report:', error);
       alert(error instanceof Error ? error.message : 'Failed to upload report');
@@ -112,6 +115,11 @@ export default function MedicalReports({ activeTab }: MedicalReportsProps) {
             {error && (
               <div className="mt-md p-sm bg-error/10 text-error rounded-lg text-bodySm">
                 {error}
+              </div>
+            )}
+            {uploadSuccess && (
+              <div className="mt-md p-sm bg-emeraldGreen/10 text-emeraldGreen rounded-lg text-bodySm">
+                Report uploaded successfully!
               </div>
             )}
           </div>

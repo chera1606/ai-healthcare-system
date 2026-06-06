@@ -139,19 +139,10 @@ app.post("/api/rag-chat", express.json({ limit: "10mb" }), async (req: Request<{
       result = await riskAgent.analyzeRisk({
         question: cleanMessage,
         retrievedChunks: relevantChunks,
-        patientId: undefined
+        patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
       });
       
-      return res.json({
-        ok: true,
-        selectedAgent: routing.selectedAgent,
-        confidence: routing.confidence,
-        reason: routing.reason,
-        reply: result.answer,
-        risks: result.risks,
-        sources: result.sources,
-        disclaimer: result.disclaimer
-      });
+      return res.json(result);
     } else {
       // Default to ReportExplainerAgent
       console.log(`RAG Chat: Routing to ReportExplainerAgent`);
@@ -235,19 +226,10 @@ app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Reques
       result = await riskAgent.analyzeRisk({
         question: cleanMessage,
         retrievedChunks: relevantChunks,
-        patientId: undefined
+        patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
       });
       
-      return res.json({
-        ok: true,
-        selectedAgent: routing.selectedAgent,
-        confidence: routing.confidence,
-        reason: routing.reason,
-        reply: result.answer,
-        risks: result.risks,
-        sources: result.sources,
-        disclaimer: result.disclaimer
-      });
+      return res.json(result);
     } else {
       // Default to ReportExplainerAgent
       console.log(`Agents Chat: Routing to ReportExplainerAgent`);

@@ -37,11 +37,39 @@ export interface BloodPressureValue {
  * Risk assessment result for a single indicator
  */
 export interface RiskAssessment {
-  type: string;
-  extractedValue?: string;
+  observationKey: string;
+  valueText: string;
+  valueJson?: any;
+  valueNumber?: number;
+  unit?: string;
   riskLevel: RiskLevel;
   ruleApplied: string;
-  explanation?: string;
+  sourceText: string;
+  reportId?: number;
+  observedAt?: string;
+  confidence?: number;
+}
+
+/**
+ * Source citation from observations
+ */
+export interface ObservationSource {
+  reportId: number;
+  observationKey: string;
+  textPreview: string;
+  observedAt?: string;
+  confidence?: number;
+}
+
+/**
+ * Source citation from chunks (fallback)
+ */
+export interface ChunkSource {
+  chunkId: number;
+  reportId: number;
+  fileName: string;
+  textPreview: string;
+  similarity: number;
 }
 
 /**
@@ -49,7 +77,9 @@ export interface RiskAssessment {
  */
 export interface RiskAnalyzerInput {
   question: string;
-  retrievedChunks: Array<{
+  patientId?: number;
+  reportId?: number;
+  retrievedChunks?: Array<{
     chunkId: number;
     reportId: number;
     chunkText: string;
@@ -57,22 +87,17 @@ export interface RiskAnalyzerInput {
     originalName: string;
     similarity: number;
   }>;
-  patientId?: string;
 }
 
 /**
  * Output from the RiskAnalyzerAgent
  */
 export interface RiskAnalyzerOutput {
-  answer: string;
+  ok: boolean;
+  selectedAgent: string;
+  reply: string;
   risks: RiskAssessment[];
-  sources: Array<{
-    chunkId: number;
-    reportId: number;
-    fileName: string;
-    textPreview: string;
-    similarity: number;
-  }>;
-  disclaimer: string;
+  sources: Array<ObservationSource | ChunkSource>;
   confidence: number;
+  disclaimer: string;
 }

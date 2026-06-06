@@ -195,6 +195,70 @@ export async function getObservationsByReportId(reportId: number): Promise<Medic
 }
 
 /**
+ * Gets the latest observation for a specific key for a patient
+ */
+export async function getLatestObservationByKey(patientId: number, observationKey: string): Promise<MedicalObservation | null> {
+  await ensureDatabase();
+
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key = $2
+      ORDER BY observed_at DESC, created_at DESC
+      LIMIT 1
+    `,
+    [patientId, observationKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+/**
+ * Gets observations for multiple observation keys for a patient
+ */
+export async function getObservationsByKeys(patientId: number, observationKeys: string[]): Promise<MedicalObservation[]> {
+  if (observationKeys.length === 0) return [];
+
+  await ensureDatabase();
+
+  const placeholders = observationKeys.map((_, i) => `$${i + 2}`).join(', ');
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key IN (${placeholders})
+      ORDER BY observed_at DESC, created_at DESC
+    `,
+    [patientId, ...observationKeys]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Gets the latest observations for a patient (one per key)
+ */
+export async function getLatestObservationsForPatient(patientId: number): Promise<Map<string, MedicalObservation>> {
+  await ensureDatabase();
+
+  const result = await getPool().query(
+    `
+      SELECT DISTINCT ON (observation_key) *
+      FROM medical_observations
+      WHERE patient_id = $1
+      ORDER BY observation_key, observed_at DESC, created_at DESC
+    `,
+    [patientId]
+  );
+
+  const observationsMap = new Map<string, MedicalObservation>();
+  for (const row of result.rows) {
+    observationsMap.set(row.observation_key, row);
+  }
+
+  return observationsMap;
+}
+
+/**
  * Deletes observations by report ID
  */
 export async function deleteObservationsByReportId(reportId: number): Promise<void> {

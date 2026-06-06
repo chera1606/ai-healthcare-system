@@ -148,10 +148,10 @@ export default function AIAssistant({ activeTab }: AIAssistantProps) {
                               <div className="flex items-start gap-2">
                                 <span className="text-labelSm text-primary font-medium">[{index + 1}]</span>
                                 <div className="flex-1">
-                                  <p className="text-bodySm text-onSurface mb-1">{source.chunkText}</p>
+                                  <p className="text-bodySm text-onSurface mb-1">{source.textPreview}</p>
                                   <div className="flex items-center gap-2 text-labelSm text-onSurfaceVariant">
                                     <span className="material-symbols-outlined text-[14px]">description</span>
-                                    <span>{source.originalName}</span>
+                                    <span>{source.fileName}</span>
                                     <span className="text-outline">•</span>
                                     <span className="text-primary">Similarity: {(source.similarity * 100).toFixed(0)}%</span>
                                   </div>

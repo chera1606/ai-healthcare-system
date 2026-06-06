@@ -76,8 +76,8 @@ export interface ChatMessage {
 export interface SourceCitation {
   chunkId: number;
   reportId: number;
-  chunkText: string;
-  originalName: string;
+  fileName: string;
+  textPreview: string;
   similarity: number;
 }
 
