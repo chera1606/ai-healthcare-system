@@ -169,6 +169,7 @@ async function processUpload(req: UploadRequest, res: Response): Promise<void> {
       const sourceKind = getReportFileKind(req.file);
       
       console.log(`Extracted ${extractedText.length} characters from ${req.file.originalname}`);
+      console.log('Extracted text preview:', extractedText.substring(0, 500));
       
       // Generate embedding for full report
       const embedding = await generateEmbedding(extractedText);
