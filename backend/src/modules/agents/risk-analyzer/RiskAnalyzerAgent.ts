@@ -151,6 +151,9 @@ export class RiskAnalyzerAgent {
     for (const obs of observations) {
       const riskLevel = this.calculateRiskLevel(obs.observation_key, obs);
       
+      // Log the observation for debugging
+      console.log(`RiskAnalyzerAgent: Assessing ${obs.observation_key}: valueText=${obs.value_text}, valueNumber=${obs.value_number}, riskLevel=${riskLevel}`);
+      
       assessments.push({
         observationKey: obs.observation_key,
         valueText: obs.value_text,
@@ -251,11 +254,19 @@ export class RiskAnalyzerAgent {
     const seenKeys = new Set<string>();
 
     for (const obs of observations) {
-      const key = `${obs.report_id}-${obs.observation_key}`;
+      // Use normalized source text for deduplication to avoid duplicates
+      const normalizedText = obs.source_text
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ')
+        .substring(0, 200);
+      
+      const key = `${obs.report_id}-${obs.observation_key}-${normalizedText}`;
       if (seenKeys.has(key)) continue;
       seenKeys.add(key);
 
       sources.push({
+        sourceType: 'observation',
         reportId: obs.report_id,
         observationKey: obs.observation_key,
         textPreview: obs.source_text.substring(0, 200) + (obs.source_text.length > 200 ? '...' : ''),
@@ -283,6 +294,7 @@ export class RiskAnalyzerAgent {
                           (chunk.chunkText.length > previewLength ? '...' : '');
 
       sources.push({
+        sourceType: 'chunk',
         chunkId: chunk.chunkId,
         reportId: chunk.reportId,
         fileName: chunk.originalName,
@@ -308,16 +320,22 @@ You are a health information assistant. Explain the following risk assessment re
 
 User question: "${question}"
 
-Risk assessments (already calculated using deterministic rules - do not change these):
+Risk assessments (already calculated using deterministic rules - do NOT change these):
 ${riskAssessments.map(r => `- ${r.observationKey}: ${r.valueText} ${r.unit || ''} (risk level: ${r.riskLevel})`).join('\n')}
 
-Guidelines:
+IMPORTANT GUIDELINES:
+- Risk levels are already calculated by deterministic logic - do NOT change them
+- Do NOT say a value is missing if valueText or valueNumber exists
+- Always mention the exact value when available (e.g., "132 mg/dL")
 - Explain what the values mean in simple terms
-- Explain the risk level (normal, elevated, high, etc.)
-- Do not diagnose or provide medical advice
+- Explain the risk level (normal, elevated, high, etc.) based on the deterministic rule
+- Do NOT diagnose or provide medical advice
 - Recommend discussing with a qualified clinician
 - Keep it concise and easy to understand
 - This is informational only, not medical advice
+
+Example format:
+"Your [observation] was [value] [unit]. Based on the rule used by this app, this falls in the [risk level] range. Please discuss this with a qualified clinician. This is informational and not medical advice."
 
 Provide a clear, helpful explanation:
 `;

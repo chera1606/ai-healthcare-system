@@ -54,6 +54,7 @@ export interface RiskAssessment {
  * Source citation from observations
  */
 export interface ObservationSource {
+  sourceType: 'observation';
   reportId: number;
   observationKey: string;
   textPreview: string;
@@ -65,11 +66,12 @@ export interface ObservationSource {
  * Source citation from chunks (fallback)
  */
 export interface ChunkSource {
+  sourceType: 'chunk';
   chunkId: number;
   reportId: number;
   fileName: string;
   textPreview: string;
-  similarity: number;
+  similarity?: number;
 }
 
 /**

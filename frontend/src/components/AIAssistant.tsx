@@ -144,16 +144,36 @@ export default function AIAssistant({ activeTab }: AIAssistantProps) {
                         </div>
                         <div className="space-y-2">
                           {message.sources.map((source: SourceCitation, index: number) => (
-                            <div key={`${source.chunkId}-${index}`} className="p-sm bg-surfaceContainer rounded-lg">
+                            <div key={`${source.sourceType}-${source.reportId}-${index}`} className="p-sm bg-surfaceContainer rounded-lg">
                               <div className="flex items-start gap-2">
                                 <span className="text-labelSm text-primary font-medium">[{index + 1}]</span>
                                 <div className="flex-1">
                                   <p className="text-bodySm text-onSurface mb-1">{source.textPreview}</p>
                                   <div className="flex items-center gap-2 text-labelSm text-onSurfaceVariant">
-                                    <span className="material-symbols-outlined text-[14px]">description</span>
-                                    <span>{source.fileName}</span>
-                                    <span className="text-outline">•</span>
-                                    <span className="text-primary">Similarity: {(source.similarity * 100).toFixed(0)}%</span>
+                                    {source.sourceType === 'chunk' && source.fileName && (
+                                      <>
+                                        <span className="material-symbols-outlined text-[14px]">description</span>
+                                        <span>{source.fileName}</span>
+                                        {source.similarity && (
+                                          <>
+                                            <span className="text-outline">•</span>
+                                            <span className="text-primary">Similarity: {(source.similarity * 100).toFixed(0)}%</span>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
+                                    {source.sourceType === 'observation' && source.observationKey && (
+                                      <>
+                                        <span className="material-symbols-outlined text-[14px]">medical_services</span>
+                                        <span>{source.observationKey}</span>
+                                        {source.confidence && (
+                                          <>
+                                            <span className="text-outline">•</span>
+                                            <span className="text-primary">Confidence: {(source.confidence * 100).toFixed(0)}%</span>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               </div>

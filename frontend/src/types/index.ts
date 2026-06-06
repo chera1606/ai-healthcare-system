@@ -74,11 +74,14 @@ export interface ChatMessage {
 
 // Source Citation
 export interface SourceCitation {
-  chunkId: number;
+  sourceType: 'chunk' | 'observation';
+  chunkId?: number;
   reportId: number;
-  fileName: string;
+  fileName?: string;
+  observationKey?: string;
   textPreview: string;
-  similarity: number;
+  similarity?: number;
+  confidence?: number;
 }
 
 // Health Stats
