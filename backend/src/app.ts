@@ -24,8 +24,6 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json({ limit: "10mb", type: "application/json" }));
-app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use("/api/reports", reportRoutes);
 app.use("/api/agents", agentRoutes);
@@ -45,7 +43,7 @@ app.get("/api", (_req: Request, res: Response) => {
   });
 });
 
-app.post("/api/chat", async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+app.post("/api/chat", express.json({ limit: "10mb" }), async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
   const { message } = req.body || {};
 
   if (!message || typeof message !== "string" || !message.trim()) {
@@ -79,7 +77,7 @@ app.post("/api/chat", async (req: Request<{}, {}, ChatRequestBody>, res: Respons
   }
 });
 
-app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+app.post("/api/rag-chat", express.json({ limit: "10mb" }), async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
   const { message } = req.body || {};
 
   if (!message || typeof message !== "string" || !message.trim()) {
@@ -184,7 +182,7 @@ app.post("/api/rag-chat", async (req: Request<{}, {}, ChatRequestBody>, res: Res
   }
 });
 
-app.post("/api/agents/chat", async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
+app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
   const { message } = req.body || {};
 
   if (!message || typeof message !== "string" || !message.trim()) {
@@ -280,7 +278,7 @@ app.post("/api/agents/chat", async (req: Request<{}, {}, ChatRequestBody>, res: 
   }
 });
 
-app.post("/api/search", async (req: Request, res: Response) => {
+app.post("/api/search", express.json({ limit: "10mb" }), async (req: Request, res: Response) => {
   const { query } = req.body || {};
 
   if (!query || typeof query !== "string" || !query.trim()) {

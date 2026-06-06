@@ -9,10 +9,14 @@ class ApiService {
     const token = localStorage.getItem('authToken');
 
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     };
+
+    // Only set Content-Type to application/json if body is not FormData
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     try {
       const response = await fetch(url, {
