@@ -232,7 +232,10 @@ export class RiskAnalyzerAgent {
    */
   private calculateRiskLevel(observationKey: string, observation: any): RiskLevel {
     const valueNumber = this.getNumericObservationValue(observation);
-    const valueJson = observation.value_json ? JSON.parse(observation.value_json) : null;
+    // Handle case where value_json might already be an object (not a string)
+    const valueJson = observation.value_json 
+      ? (typeof observation.value_json === 'string' ? JSON.parse(observation.value_json) : observation.value_json)
+      : null;
 
     // Debug logging for fasting glucose
     if (observationKey === 'fasting_glucose') {
