@@ -143,12 +143,57 @@ export class RiskAnalyzerAgent {
   }
 
   /**
+   * Extracts numeric value from observation with fallback parsing
+   * Priority: value_number → value_text → source_text
+   */
+  private getNumericObservationValue(observation: any): number | null {
+    // 1. Prefer value_number if valid
+    if (observation.value_number !== null && observation.value_number !== undefined && !isNaN(observation.value_number)) {
+      return observation.value_number;
+    }
+
+    // 2. Parse from value_text
+    if (observation.value_text) {
+      const match = observation.value_text.match(/(\d+\.?\d*)/);
+      if (match) {
+        const parsed = parseFloat(match[1]);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+
+    // 3. Parse from source_text
+    if (observation.source_text) {
+      const match = observation.source_text.match(/(\d+\.?\d*)/);
+      if (match) {
+        const parsed = parseFloat(match[1]);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+
+    // 4. Return null if no numeric value found
+    return null;
+  }
+
+  /**
    * Assesses risks from stored medical observations using deterministic rules
    */
   private assessRisksFromObservations(observations: any[]): RiskAssessment[] {
     const assessments: RiskAssessment[] = [];
 
     for (const obs of observations) {
+      // Log full observation data for debugging fasting_glucose
+      if (obs.observation_key === 'fasting_glucose') {
+        console.log(`RiskAnalyzerAgent: FASTING_GLUCOSE OBSERVATION DEBUG:`);
+        console.log(`  id: ${obs.id}`);
+        console.log(`  observation_key: ${obs.observation_key}`);
+        console.log(`  value_text: ${obs.value_text}`);
+        console.log(`  value_number: ${obs.value_number}`);
+        console.log(`  value_json: ${obs.value_json}`);
+        console.log(`  unit: ${obs.unit}`);
+        console.log(`  source_text: ${obs.source_text}`);
+        console.log(`  confidence: ${obs.confidence}`);
+      }
+
       const riskLevel = this.calculateRiskLevel(obs.observation_key, obs);
       
       // Log the observation for debugging
@@ -186,8 +231,14 @@ export class RiskAnalyzerAgent {
    * Calculates risk level using deterministic rules
    */
   private calculateRiskLevel(observationKey: string, observation: any): RiskLevel {
-    const valueNumber = observation.value_number;
+    const valueNumber = this.getNumericObservationValue(observation);
     const valueJson = observation.value_json ? JSON.parse(observation.value_json) : null;
+
+    // Debug logging for fasting glucose
+    if (observationKey === 'fasting_glucose') {
+      console.log(`RiskAnalyzerAgent: FASTING_GLUCOSE RISK CALCULATION:`);
+      console.log(`  Parsed numeric value: ${valueNumber}`);
+    }
 
     switch (observationKey) {
       case 'blood_pressure':
@@ -199,7 +250,7 @@ export class RiskAnalyzerAgent {
         return 'normal';
 
       case 'ldl_cholesterol':
-        if (valueNumber) {
+        if (valueNumber !== null) {
           if (valueNumber >= 190) return 'very_high';
           if (valueNumber >= 160) return 'high';
           if (valueNumber >= 130) return 'borderline_high';
@@ -207,28 +258,37 @@ export class RiskAnalyzerAgent {
         return 'normal';
 
       case 'total_cholesterol':
-        if (valueNumber) {
+        if (valueNumber !== null) {
           if (valueNumber >= 240) return 'high';
           if (valueNumber >= 200) return 'borderline_high';
         }
         return 'normal';
 
       case 'fasting_glucose':
-        if (valueNumber) {
-          if (valueNumber >= 126) return 'high';
-          if (valueNumber >= 100) return 'borderline_high';
+        if (valueNumber !== null) {
+          if (valueNumber >= 126) {
+            console.log(`RiskAnalyzerAgent: Fasting glucose ${valueNumber} >= 126 → high`);
+            return 'high';
+          }
+          if (valueNumber >= 100) {
+            console.log(`RiskAnalyzerAgent: Fasting glucose ${valueNumber} >= 100 → borderline_high`);
+            return 'borderline_high';
+          }
+          console.log(`RiskAnalyzerAgent: Fasting glucose ${valueNumber} < 100 → normal`);
+          return 'normal';
         }
-        return 'normal';
+        console.log(`RiskAnalyzerAgent: Fasting glucose value is null → unknown`);
+        return 'unknown';
 
       case 'hba1c':
-        if (valueNumber) {
+        if (valueNumber !== null) {
           if (valueNumber >= 6.5) return 'high';
           if (valueNumber >= 5.7) return 'borderline_high';
         }
         return 'normal';
 
       case 'hemoglobin':
-        if (valueNumber) {
+        if (valueNumber !== null) {
           if (valueNumber >= 12 && valueNumber <= 17) return 'normal';
           return 'abnormal';
         }
@@ -251,19 +311,18 @@ export class RiskAnalyzerAgent {
    */
   private createSourcesFromObservations(observations: any[]): ObservationSource[] {
     const sources: ObservationSource[] = [];
-    const seenKeys = new Set<string>();
+    const seenNormalizedText = new Set<string>();
 
     for (const obs of observations) {
       // Use normalized source text for deduplication to avoid duplicates
       const normalizedText = obs.source_text
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, ' ')
-        .substring(0, 200);
+        .replace(/\s+/g, ' ');
       
-      const key = `${obs.report_id}-${obs.observation_key}-${normalizedText}`;
-      if (seenKeys.has(key)) continue;
-      seenKeys.add(key);
+      // Deduplicate by normalized text only
+      if (seenNormalizedText.has(normalizedText)) continue;
+      seenNormalizedText.add(normalizedText);
 
       sources.push({
         sourceType: 'observation',
@@ -314,19 +373,25 @@ export class RiskAnalyzerAgent {
   private async generateExplanation(question: string, riskAssessments: RiskAssessment[]): Promise<string> {
     const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+    // Build deterministic summary string for each assessment
+    const deterministicSummaries = riskAssessments.map(r => 
+      `${r.observationKey} was ${r.valueText} ${r.unit || ''}. Deterministic risk level: ${r.riskLevel}.`
+    ).join('\n');
+
     // Build a simple explanation prompt
     const prompt = `
 You are a health information assistant. Explain the following risk assessment results in simple, beginner-friendly language.
 
 User question: "${question}"
 
-Risk assessments (already calculated using deterministic rules - do NOT change these):
-${riskAssessments.map(r => `- ${r.observationKey}: ${r.valueText} ${r.unit || ''} (risk level: ${r.riskLevel})`).join('\n')}
+DETERMINISTIC SUMMARY (you must repeat these exact values and risk levels):
+${deterministicSummaries}
 
-IMPORTANT GUIDELINES:
-- Risk levels are already calculated by deterministic logic - do NOT change them
-- Do NOT say a value is missing if valueText or valueNumber exists
-- Always mention the exact value when available (e.g., "132 mg/dL")
+CRITICAL INSTRUCTIONS:
+- You MUST repeat the provided exact values from the deterministic summary
+- You MUST repeat the provided deterministic risk levels (do NOT change high to normal, etc.)
+- Do NOT say a value is missing if it's shown in the deterministic summary
+- Do NOT change the risk level that was calculated by deterministic rules
 - Explain what the values mean in simple terms
 - Explain the risk level (normal, elevated, high, etc.) based on the deterministic rule
 - Do NOT diagnose or provide medical advice
@@ -341,6 +406,7 @@ Provide a clear, helpful explanation:
 `;
 
     console.log(`RiskAnalyzerAgent: Sending prompt to Gemini`);
+    console.log(`RiskAnalyzerAgent: Deterministic summary: ${deterministicSummaries}`);
     const result = await model.generateContent(prompt);
     const reply = result.response.text();
 
