@@ -8,6 +8,7 @@ import { searchSimilarReports } from "./modules/rag/repositories/search.reposito
 import { generateEmbedding } from "./modules/rag/services/embeddings.js";
 import { ReportExplainerAgent } from "./modules/agents/report-explainer/ReportExplainerAgent.js";
 import { RiskAnalyzerAgent } from "./modules/agents/risk-analyzer/RiskAnalyzerAgent.js";
+import { TimelineMemoryAgent } from "./modules/agents/timeline-memory/TimelineMemoryAgent.js";
 import { SupervisorAgent } from "./modules/agents/supervisor/SupervisorAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -226,6 +227,15 @@ app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Reques
       result = await riskAgent.analyzeRisk({
         question: cleanMessage,
         retrievedChunks: relevantChunks,
+        patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
+      });
+      
+      return res.json(result);
+    } else if (routing.selectedAgent === 'timeline_memory') {
+      console.log(`Agents Chat: Routing to TimelineMemoryAgent`);
+      const timelineAgent = new TimelineMemoryAgent();
+      result = await timelineAgent.analyzeTimeline({
+        question: cleanMessage,
         patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
       });
       

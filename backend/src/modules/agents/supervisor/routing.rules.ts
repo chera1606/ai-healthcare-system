@@ -55,6 +55,27 @@ export const ROUTING_RULES: RoutingRule[] = [
     reason: 'The user is asking about health risks or whether values are normal/abnormal.'
   },
 
+  // TIMELINE MEMORY - High Priority (Priority 2)
+  // These keywords relate to tracking changes over time and trends
+  {
+    agent: 'timeline_memory',
+    keywords: [
+      'changed over time',
+      'trend',
+      'history',
+      'improved',
+      'worse',
+      'better',
+      'compare',
+      'between reports',
+      'since my last report',
+      'has my',
+      'is my'
+    ],
+    priority: 2,
+    reason: 'The user is asking about changes over time or trends in their health data.'
+  },
+
   // MEDICATION CHECKER - Medium Priority (Priority 3)
   // These keywords relate to medications and dosages
   {

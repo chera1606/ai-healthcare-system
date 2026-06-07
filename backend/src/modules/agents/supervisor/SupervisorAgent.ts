@@ -92,8 +92,9 @@ export class SupervisorAgent {
     // Currently implemented agents:
     // - report_explainer: Explains medical reports in simple language
     // - risk_analyzer: Analyzes health risk signals using rule-based checks
+    // - timeline_memory: Tracks health changes over time
     // Other agents will be added in future tasks
-    const implementedAgents = ['report_explainer', 'risk_analyzer'];
+    const implementedAgents = ['report_explainer', 'risk_analyzer', 'timeline_memory'];
     return implementedAgents.includes(agent);
   }
 }
