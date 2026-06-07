@@ -269,3 +269,82 @@ export async function deleteObservationsByReportId(reportId: number): Promise<vo
     [reportId]
   );
 }
+
+/**
+ * Gets observation history for a specific key for a patient (ordered by observed_at ASC)
+ */
+export async function getObservationHistoryByKey(patientId: number, observationKey: string): Promise<MedicalObservation[]> {
+  await ensureDatabase();
+
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key = $2
+      ORDER BY observed_at ASC, created_at ASC
+    `,
+    [patientId, observationKey]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Gets observation history for multiple keys for a patient (ordered by observed_at ASC)
+ */
+export async function getObservationHistoryByKeys(patientId: number, observationKeys: string[]): Promise<MedicalObservation[]> {
+  if (observationKeys.length === 0) return [];
+
+  await ensureDatabase();
+
+  const placeholders = observationKeys.map((_, i) => `$${i + 2}`).join(', ');
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key IN (${placeholders})
+      ORDER BY observed_at ASC, created_at ASC
+    `,
+    [patientId, ...observationKeys]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Gets all observation history for a patient (ordered by observed_at ASC)
+ */
+export async function getAllObservationHistoryForPatient(patientId: number): Promise<MedicalObservation[]> {
+  await ensureDatabase();
+
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1
+      ORDER BY observed_at ASC, created_at ASC
+    `,
+    [patientId]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Gets the latest and previous observation for a specific key for a patient
+ */
+export async function getLatestAndPreviousObservation(patientId: number, observationKey: string): Promise<{ latest: MedicalObservation | null; previous: MedicalObservation | null }> {
+  await ensureDatabase();
+
+  const result = await getPool().query(
+    `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key = $2
+      ORDER BY observed_at DESC, created_at DESC
+      LIMIT 2
+    `,
+    [patientId, observationKey]
+  );
+
+  const latest = result.rows[0] || null;
+  const previous = result.rows[1] || null;
+
+  return { latest, previous };
+}
