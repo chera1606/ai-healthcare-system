@@ -60,6 +60,35 @@ const createObservationsTableSql = `
   CREATE INDEX IF NOT EXISTS idx_medical_observations_patient_date ON medical_observations(patient_id, observed_at);
 `;
 
+const createConflictsTableSql = `
+  CREATE TABLE IF NOT EXISTS observation_conflicts (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER NOT NULL,
+    observation_key VARCHAR(100) NOT NULL,
+    conflict_type VARCHAR(100) NOT NULL,
+    severity VARCHAR(50) NOT NULL,
+    observation_1_id INTEGER,
+    observation_2_id INTEGER,
+    report_1_id INTEGER,
+    report_2_id INTEGER,
+    value_1_text TEXT,
+    value_2_text TEXT,
+    value_1_number DECIMAL(10,2),
+    value_2_number DECIMAL(10,2),
+    difference DECIMAL(10,2),
+    explanation TEXT,
+    detected_at TIMESTAMP DEFAULT NOW(),
+    resolved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_obs_conflicts_patient_id ON observation_conflicts(patient_id);
+  CREATE INDEX IF NOT EXISTS idx_obs_conflicts_observation_key ON observation_conflicts(observation_key);
+  CREATE INDEX IF NOT EXISTS idx_obs_conflicts_severity ON observation_conflicts(severity);
+  CREATE INDEX IF NOT EXISTS idx_obs_conflicts_resolved ON observation_conflicts(resolved);
+  CREATE INDEX IF NOT EXISTS idx_obs_conflicts_detected_at ON observation_conflicts(detected_at);
+`;
+
 export async function ensureDatabase(): Promise<void> {
   if (initialized) {
     return;
@@ -71,6 +100,7 @@ export async function ensureDatabase(): Promise<void> {
       await getPool().query(createReportsTableSql);
       await getPool().query(createChunksTableSql);
       await getPool().query(createObservationsTableSql);
+      await getPool().query(createConflictsTableSql);
       initialized = true;
     })();
   }

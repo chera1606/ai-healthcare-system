@@ -348,3 +348,48 @@ export async function getLatestAndPreviousObservation(patientId: number, observa
 
   return { latest, previous };
 }
+
+/**
+ * Gets all observation history for a patient grouped by observation_key.
+ * Each list inside the map is sorted ascending by observed_at (oldest first).
+ * If observationKeys is provided, only those keys are returned.
+ *
+ * Used by ConflictDetectorAgent to compare oldest vs latest value per key.
+ */
+export async function getObservationsGroupedByKey(
+  patientId: number,
+  observationKeys?: string[]
+): Promise<Map<string, MedicalObservation[]>> {
+  await ensureDatabase();
+
+  let query: string;
+  let params: any[];
+
+  if (observationKeys && observationKeys.length > 0) {
+    const placeholders = observationKeys.map((_, i) => `$${i + 2}`).join(', ');
+    query = `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1 AND observation_key IN (${placeholders})
+      ORDER BY observation_key, observed_at ASC, created_at ASC
+    `;
+    params = [patientId, ...observationKeys];
+  } else {
+    query = `
+      SELECT * FROM medical_observations
+      WHERE patient_id = $1
+      ORDER BY observation_key, observed_at ASC, created_at ASC
+    `;
+    params = [patientId];
+  }
+
+  const result = await getPool().query(query, params);
+
+  const grouped = new Map<string, MedicalObservation[]>();
+  for (const row of result.rows) {
+    const key: string = row.observation_key;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(row);
+  }
+
+  return grouped;
+}
