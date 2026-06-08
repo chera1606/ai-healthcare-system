@@ -10,7 +10,8 @@ export type AgentType =
   | 'risk_analyzer'
   | 'care_plan'
   | 'emergency_escalator'
-  | 'medication_checker';
+  | 'medication_checker'
+  | 'timeline_memory';
 
 /**
  * Input for the SupervisorAgent routing function

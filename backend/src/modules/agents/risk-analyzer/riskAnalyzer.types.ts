@@ -12,7 +12,8 @@ export type RiskLevel =
   | 'very_high'
   | 'critical'
   | 'elevated'
-  | 'abnormal';
+  | 'abnormal'
+  | 'unknown';
 
 /**
  * Extracted health value from text
