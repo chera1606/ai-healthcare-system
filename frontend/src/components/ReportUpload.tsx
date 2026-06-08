@@ -136,10 +136,10 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
   };
 
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 shadow-2xl shadow-black/30">
+    <div className="glass-card rounded-2xl p-8 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-3xl font-bold text-white">Upload Medical Report</h2>
-        <p className="mt-2 text-slate-300">
+        <h2 className="text-3xl font-bold text-slate-900">Upload Medical Report</h2>
+        <p className="mt-2 text-slate-500">
           Upload PDF, TXT, or images to add them to your searchable medical intelligence database
         </p>
       </div>
@@ -154,25 +154,25 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => documentInputRef.current?.click()}
-          className={`cursor-pointer rounded-3xl border-2 border-dashed px-8 py-12 transition-all duration-300 ${
+          className={`cursor-pointer rounded-2xl border-2 border-dashed px-8 py-12 transition-all duration-300 ${
             isDragging
-              ? "border-teal-400 bg-teal-500/10 scale-[1.02]"
-              : "border-slate-700 bg-slate-950/50 hover:border-teal-400/50 hover:bg-slate-950"
+              ? "border-blue-400 bg-blue-50 scale-[1.02]"
+              : "border-slate-200 bg-slate-50/50 hover:border-blue-300 hover:bg-blue-50/30"
           }`}
         >
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-800">
-              <svg className="h-8 w-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 border border-blue-100">
+              <svg className="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
-            <p className="text-lg font-semibold text-white">
+            <p className="text-lg font-semibold text-slate-800">
               Drag and drop your medical report here
             </p>
             <p className="mt-2 text-sm text-slate-400">
               Supports PDF, TXT, and images (JPG, PNG)
             </p>
-            <div className="mt-4 inline-flex items-center rounded-full border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
               {fileBadge}
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
           <button
             type="button"
             onClick={() => documentInputRef.current?.click()}
-            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
+            className="group rounded-2xl border border-slate-200/60 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/30"
           >
             <span className="flex items-center justify-center gap-2">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +195,7 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
+            className="group rounded-2xl border border-slate-200/60 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/30"
           >
             <span className="flex items-center justify-center gap-2">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,7 +209,7 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
           <button
             type="button"
             onClick={() => galleryInputRef.current?.click()}
-            className="group rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition-all hover:border-teal-400 hover:text-teal-300"
+            className="group rounded-2xl border border-slate-200/60 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/30"
           >
             <span className="flex items-center justify-center gap-2">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,9 +246,9 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
         />
 
         {file && (
-          <div className="rounded-2xl border border-slate-700 bg-slate-950/50 px-4 py-3 text-sm text-slate-300">
+          <div className="rounded-2xl border border-slate-200/60 bg-white px-4 py-3 text-sm text-slate-600">
             <span className="flex items-center gap-2">
-              <svg className="h-4 w-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {file.name}
@@ -257,14 +257,14 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
         )}
 
         {previewUrl && (
-          <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
-            <div className="border-b border-slate-800 px-4 py-3 text-sm font-medium text-slate-200">
+          <div className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white">
+            <div className="border-b border-slate-100 px-4 py-3 text-sm font-medium text-slate-700">
               Photo preview
             </div>
             <img
               src={previewUrl}
               alt="Selected report preview"
-              className="max-h-[400px] w-full object-contain bg-black"
+              className="max-h-[400px] w-full object-contain bg-slate-50"
             />
           </div>
         )}
@@ -272,7 +272,7 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 px-6 py-4 text-lg font-semibold text-white transition-all hover:from-teal-400 hover:to-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg shadow-teal-500/25"
+          className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-lg font-semibold text-white transition-all hover:from-blue-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg shadow-blue-500/20"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -289,13 +289,13 @@ export default function ReportUpload({ onUploadSuccess }: ReportUploadProps) {
       </form>
 
       {error && (
-        <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-4 text-red-200">
+        <div className="mt-4 rounded-2xl border border-rose-200/60 bg-rose-50 px-6 py-4 text-rose-600">
           {error}
         </div>
       )}
 
       {status && (
-        <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 text-emerald-200">
+        <div className="mt-4 rounded-2xl border border-emerald-200/60 bg-emerald-50 px-6 py-4 text-emerald-700">
           {status}
         </div>
       )}
