@@ -80,6 +80,13 @@ export function runBloodPressureTests() {
 }
 
 // Run tests if this file is executed directly
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+const isMain = process.argv[1] && (
+  process.argv[1] === fileURLToPath(import.meta.url) || 
+  process.argv[1].replace(/\\/g, '/').endsWith('riskRules.test.ts') ||
+  process.argv[1].replace(/\\/g, '/').endsWith('riskRules.test.js')
+);
+
+if (isMain) {
   runBloodPressureTests();
 }

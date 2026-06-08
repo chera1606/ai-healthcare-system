@@ -8,17 +8,17 @@ import {
   TimelineMemoryOutput,
   Trend,
   ObservationSource
-} from './timelineMemory.types';
-import { TIMELINE_EXPLANATION_PROMPT } from './timelineMemory.prompt';
+} from './timelineMemory.types.js';
+import { TIMELINE_EXPLANATION_PROMPT } from './timelineMemory.prompt.js';
 import {
   detectTimelineObservationKeys,
   createTrend,
   formatObservationValue
-} from './timelineMemory.utils';
+} from './timelineMemory.utils.js';
 import {
   getObservationHistoryByKeys,
   getLatestAndPreviousObservation
-} from '../../observations/observations.repository';
+} from '../../observations/observations.repository.js';
 
 export class TimelineMemoryAgent {
   private genAI: GoogleGenerativeAI;

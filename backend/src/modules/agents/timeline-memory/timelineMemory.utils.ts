@@ -2,7 +2,7 @@
  * Utility functions for TimelineMemoryAgent
  */
 
-import { ChangeDirection, Trend } from './timelineMemory.types';
+import { ChangeDirection, Trend } from './timelineMemory.types.js';
 
 /**
  * Detects relevant observation keys based on the user's question

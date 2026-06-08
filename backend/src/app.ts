@@ -218,6 +218,7 @@ app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Reques
     // Step 4: Retrieve relevant chunks using vector similarity search
     const relevantChunks = await searchSimilarReports(questionEmbedding.join(','), 5);
     console.log(`Agents Chat: Retrieved ${relevantChunks.length} relevant chunks`);
+    console.log(`Agents Chat: Selected agent from supervisor: "${routing.selectedAgent}"`);
     
     // Step 5: Route to the appropriate agent based on supervisor selection
     let result;
@@ -242,7 +243,7 @@ app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Reques
       return res.json(result);
     } else {
       // Default to ReportExplainerAgent
-      console.log(`Agents Chat: Routing to ReportExplainerAgent`);
+      console.log(`Agents Chat: Routing to ReportExplainerAgent (selectedAgent was: "${routing.selectedAgent}")`);
       const agent = new ReportExplainerAgent();
       result = await agent.explainReport({
         question: cleanMessage,
