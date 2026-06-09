@@ -89,6 +89,28 @@ const createConflictsTableSql = `
   CREATE INDEX IF NOT EXISTS idx_obs_conflicts_detected_at ON observation_conflicts(detected_at);
 `;
 
+const createSafetyChecksTableSql = `
+  CREATE TABLE IF NOT EXISTS safety_checks (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER,
+    agent_used VARCHAR(100) NOT NULL,
+    user_question TEXT NOT NULL,
+    ai_response TEXT NOT NULL,
+    safety_score DECIMAL(3,2) NOT NULL,
+    passed BOOLEAN NOT NULL,
+    flags JSONB,
+    requires_human_review BOOLEAN DEFAULT FALSE,
+    checked_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_safety_checks_patient_id ON safety_checks(patient_id);
+  CREATE INDEX IF NOT EXISTS idx_safety_checks_agent_used ON safety_checks(agent_used);
+  CREATE INDEX IF NOT EXISTS idx_safety_checks_passed ON safety_checks(passed);
+  CREATE INDEX IF NOT EXISTS idx_safety_checks_requires_human_review ON safety_checks(requires_human_review);
+  CREATE INDEX IF NOT EXISTS idx_safety_checks_checked_at ON safety_checks(checked_at);
+`;
+
 export async function ensureDatabase(): Promise<void> {
   if (initialized) {
     return;
@@ -101,6 +123,7 @@ export async function ensureDatabase(): Promise<void> {
       await getPool().query(createChunksTableSql);
       await getPool().query(createObservationsTableSql);
       await getPool().query(createConflictsTableSql);
+      await getPool().query(createSafetyChecksTableSql);
       initialized = true;
     })();
   }
