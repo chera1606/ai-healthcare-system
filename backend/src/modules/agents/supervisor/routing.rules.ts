@@ -31,7 +31,31 @@ export const ROUTING_RULES: RoutingRule[] = [
     reason: 'The user is reporting symptoms that may indicate a medical emergency.'
   },
 
-  // TIMELINE MEMORY - High Priority (Priority 2)
+  // CONFLICT DETECTOR - High Priority (Priority 2)
+  // These keywords indicate the user wants to find conflicting data across multiple reports
+  {
+    agent: 'conflict_detector',
+    keywords: [
+      'conflict',
+      'conflicting',
+      'different reports',
+      'mismatch',
+      'inconsistent',
+      'discrepancy',
+      'compare reports',
+      'reports disagree',
+      'why are my reports different',
+      'old report vs new report',
+      'are there conflicts',
+      'reports show different',
+      'do my reports',
+      'disagree'
+    ],
+    priority: 2,
+    reason: 'The user is asking about conflicting or inconsistent information across multiple reports.'
+  },
+
+  // TIMELINE MEMORY - High Priority (Priority 3)
   // These keywords relate to tracking changes over time and trends
   {
     agent: 'timeline_memory',
@@ -48,11 +72,11 @@ export const ROUTING_RULES: RoutingRule[] = [
       'has my',
       'is my'
     ],
-    priority: 2,
+    priority: 3,
     reason: 'The user is asking about changes over time or trends in their health data.'
   },
 
-  // RISK ANALYZER - High Priority (Priority 3)
+  // RISK ANALYZER - Priority 4
   // These keywords relate to understanding health risks and abnormal values
   {
     agent: 'risk_analyzer',
@@ -72,11 +96,11 @@ export const ROUTING_RULES: RoutingRule[] = [
       'worry',
       'warning'
     ],
-    priority: 3,
+    priority: 4,
     reason: 'The user is asking about health risks or whether values are normal/abnormal.'
   },
 
-  // MEDICATION CHECKER - Medium Priority (Priority 4)
+  // MEDICATION CHECKER - Priority 5
   // These keywords relate to medications and dosages
   {
     agent: 'medication_checker',
@@ -92,11 +116,11 @@ export const ROUTING_RULES: RoutingRule[] = [
       'side effect',
       'interaction'
     ],
-    priority: 4,
+    priority: 5,
     reason: 'The user is asking about medications or prescriptions.'
   },
 
-  // CARE PLAN - Medium Priority (Priority 5)
+  // CARE PLAN - Priority 6
   // These keywords relate to next steps and follow-up actions
   {
     agent: 'care_plan',
@@ -111,11 +135,11 @@ export const ROUTING_RULES: RoutingRule[] = [
       'action',
       'plan'
     ],
-    priority: 5,
+    priority: 6,
     reason: 'The user is asking for recommendations or next steps.'
   },
 
-  // REPORT EXPLAINER - Default/Lowest Priority (Priority 6)
+  // REPORT EXPLAINER - Default/Lowest Priority (Priority 7)
   // These keywords relate to understanding report content
   // This is the fallback agent if no other rules match
   {
@@ -135,7 +159,7 @@ export const ROUTING_RULES: RoutingRule[] = [
       'tell me',
       'show me'
     ],
-    priority: 6,
+    priority: 7,
     reason: 'The user is asking to understand information from their medical report.'
   }
 ];

@@ -93,8 +93,9 @@ export class SupervisorAgent {
     // - report_explainer: Explains medical reports in simple language
     // - risk_analyzer: Analyzes health risk signals using rule-based checks
     // - timeline_memory: Tracks health changes over time
+    // - conflict_detector: Detects conflicting values across multiple reports
     // Other agents will be added in future tasks
-    const implementedAgents = ['report_explainer', 'risk_analyzer', 'timeline_memory'];
+    const implementedAgents = ['report_explainer', 'risk_analyzer', 'timeline_memory', 'conflict_detector'];
     return implementedAgents.includes(agent);
   }
 }
