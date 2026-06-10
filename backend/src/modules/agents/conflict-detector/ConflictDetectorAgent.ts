@@ -169,13 +169,29 @@ export class ConflictDetectorAgent {
       );
     }
 
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    const conflictsSummary = formatConflictSummary(conflicts);
-    const prompt = CONFLICT_EXPLANATION_PROMPT(question, conflictsSummary);
+    try {
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const conflictsSummary = formatConflictSummary(conflicts);
+      const prompt = CONFLICT_EXPLANATION_PROMPT(question, conflictsSummary);
 
-    console.log('ConflictDetectorAgent: Sending conflicts to Gemini for explanation');
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+      console.log('ConflictDetectorAgent: Sending conflicts to Gemini for explanation');
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.warn('ConflictDetectorAgent: Gemini API error, using fallback explanation:', error);
+      
+      // Fallback explanation when Gemini is unavailable
+      const conflictList = conflicts.map(c => 
+        `${c.observationKey}: ${c.previousValue} vs ${c.latestValue} (${c.severity} severity)`
+      ).join(', ');
+      
+      return (
+        `I found ${conflicts.length} conflict(s) across your reports: ${conflictList}. ` +
+        `Due to high demand on the AI service, I cannot provide a detailed explanation right now. ` +
+        `Please try again later for a more detailed explanation. ` +
+        `Discuss these differences with a qualified clinician. ` + DISCLAIMER
+      );
+    }
   }
 
   // ============================================
