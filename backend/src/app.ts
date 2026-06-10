@@ -9,7 +9,9 @@ import { generateEmbedding } from "./modules/rag/services/embeddings.js";
 import { ReportExplainerAgent } from "./modules/agents/report-explainer/ReportExplainerAgent.js";
 import { RiskAnalyzerAgent } from "./modules/agents/risk-analyzer/RiskAnalyzerAgent.js";
 import { TimelineMemoryAgent } from "./modules/agents/timeline-memory/TimelineMemoryAgent.js";
+import { ConflictDetectorAgent } from "./modules/agents/conflict-detector/ConflictDetectorAgent.js";
 import { SupervisorAgent } from "./modules/agents/supervisor/SupervisorAgent.js";
+import { protectAgentResponse } from "./modules/agents/safety-checker/SafetyCheckerAgent.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
@@ -25,6 +27,8 @@ app.use(
     credentials: true
   })
 );
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use("/api/reports", reportRoutes);
 app.use("/api/agents", agentRoutes);
@@ -62,13 +66,21 @@ app.post("/api/chat", express.json({ limit: "10mb" }), async (req: Request<{}, {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(cleanMessage);
     const reply = result.response.text();
-    
-    return res.json({
-      ok: true,
-      reply,
-      disclaimer:
-        "AI-generated content. Verify important information."
+
+    const safeResponse = await protectAgentResponse({
+      patientId: undefined,
+      agentUsed: "general_chat",
+      userQuestion: cleanMessage,
+      aiResponse: reply,
+      responsePayload: {
+        ok: true,
+        reply,
+        disclaimer:
+          "AI-generated content. Verify important information."
+      }
     });
+
+    return res.json(safeResponse);
   } catch (error) {
     console.error("Chat error:", error);
     return res.status(500).json({
@@ -111,17 +123,26 @@ app.post("/api/rag-chat", express.json({ limit: "10mb" }), async (req: Request<{
         retrievedChunks: relevantChunks,
         patientId: undefined
       });
-      
-      return res.json({
-        ok: true,
-        selectedAgent: routing.selectedAgent,
-        confidence: routing.confidence,
-        reason: routing.reason,
-        reply: `That specialist feature is not ready yet, but I can still help explain information from your uploaded report. This is informational and not medical advice.\n\n${answer}`,
+
+      const safeResponse = await protectAgentResponse({
+        patientId: 1,
+        agentUsed: routing.selectedAgent,
+        userQuestion: cleanMessage,
+        aiResponse: answer,
         sources,
-        disclaimer:
-          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+        responsePayload: {
+          ok: true,
+          selectedAgent: routing.selectedAgent,
+          confidence: routing.confidence,
+          reason: routing.reason,
+          reply: `That specialist feature is not ready yet, but I can still help explain information from your uploaded report. This is informational and not medical advice.\n\n${answer}`,
+          sources,
+          disclaimer:
+            "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+        }
       });
+
+      return res.json(safeResponse);
     }
     
     // Step 3: Generate embedding for the question
@@ -142,8 +163,35 @@ app.post("/api/rag-chat", express.json({ limit: "10mb" }), async (req: Request<{
         retrievedChunks: relevantChunks,
         patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
       });
-      
-      return res.json(result);
+
+      const safeResponse = await protectAgentResponse({
+        patientId: 1,
+        agentUsed: routing.selectedAgent,
+        userQuestion: cleanMessage,
+        aiResponse: result.reply,
+        sources: result.sources,
+        responsePayload: { ...result }
+      });
+
+      return res.json(safeResponse);
+    } else if (routing.selectedAgent === 'conflict_detector') {
+      console.log(`RAG Chat: Routing to ConflictDetectorAgent`);
+      const conflictAgent = new ConflictDetectorAgent();
+      result = await conflictAgent.detectConflicts({
+        question: cleanMessage,
+        patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
+      });
+
+      const safeResponse = await protectAgentResponse({
+        patientId: 1,
+        agentUsed: routing.selectedAgent,
+        userQuestion: cleanMessage,
+        aiResponse: result.answer,
+        sources: result.sources,
+        responsePayload: { ...result }
+      });
+
+      return res.json(safeResponse);
     } else {
       // Default to ReportExplainerAgent
       console.log(`RAG Chat: Routing to ReportExplainerAgent`);
@@ -154,16 +202,25 @@ app.post("/api/rag-chat", express.json({ limit: "10mb" }), async (req: Request<{
         patientId: undefined
       });
       
-      return res.json({
-        ok: true,
-        selectedAgent: routing.selectedAgent,
-        confidence: routing.confidence,
-        reason: routing.reason,
-        reply: result.answer,
+      const safeResponse = await protectAgentResponse({
+        patientId: 1,
+        agentUsed: routing.selectedAgent,
+        userQuestion: cleanMessage,
+        aiResponse: result.answer,
         sources: result.sources,
-        disclaimer:
-          "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+        responsePayload: {
+          ok: true,
+          selectedAgent: routing.selectedAgent,
+          confidence: routing.confidence,
+          reason: routing.reason,
+          reply: result.answer,
+          sources: result.sources,
+          disclaimer:
+            "Informational support only. This system does not diagnose, treat, or replace professional medical advice."
+        }
       });
+
+      return res.json(safeResponse);
     }
   } catch (error) {
     console.error("RAG Chat error:", error);
@@ -241,6 +298,23 @@ app.post("/api/agents/chat", express.json({ limit: "10mb" }), async (req: Reques
       });
       
       return res.json(result);
+    } else if (routing.selectedAgent === 'conflict_detector') {
+      console.log(`Agents Chat: Routing to ConflictDetectorAgent`);
+      const conflictAgent = new ConflictDetectorAgent();
+      result = await conflictAgent.detectConflicts({
+        question: cleanMessage,
+        patientId: 1 // TODO: Replace hardcoded patientId with authenticated user/patient ID
+      });
+      
+      return res.json({
+        ok: true,
+        selectedAgent: routing.selectedAgent,
+        confidence: result.confidence,
+        reason: routing.reason,
+        reply: result.answer,
+        sources: result.sources,
+        disclaimer: result.disclaimer
+      });
     } else {
       // Default to ReportExplainerAgent
       console.log(`Agents Chat: Routing to ReportExplainerAgent (selectedAgent was: "${routing.selectedAgent}")`);
